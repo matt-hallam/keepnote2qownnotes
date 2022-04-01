@@ -1,0 +1,53 @@
+#!/usr/bin/python3
+
+import os
+import sys
+import subprocess
+from shutil import rmtree
+
+# basic sanity check
+if not os.path.isdir("__NOTEBOOK__"):
+    sys.exit('Please run in a keepnote notebook directory')
+
+# walk files
+# - delete node.xml files
+# - convert page.html to name of the directory they are in plus .md extention
+print("\n\nPhase 1\n\n")
+for root, dirs, files in os.walk(".", topdown=False):
+   for name in files:
+      f = os.path.join(root, name)
+      if name == 'node.xml':
+          print("deleting " + f)
+          os.remove(f)
+      if name == 'page.html':
+          newname = os.path.join(root,root.split('/')[-1] + '.md')
+          print("converting " + f + ' to ' + newname)
+          with open(newname,"w") as newnamefd:
+              subprocess.run(["html2text",f],stdout=newnamefd)
+              os.remove(f)
+
+# walk directories
+# - if directory only has one entry in it:
+#     rename to directory to directory_del (to avoid any name clashes)
+#     move the file that is in it up one level
+#     delete directory_del
+print("\n\nPhase 2\n\n")
+for root, dirs, files in os.walk(".", topdown=False):
+   for name in dirs:
+       d = os.path.join(root,name)
+       ds = os.path.split(d)
+       dl = os.listdir(d)
+       if len(dl) == 1:
+           dirrn = d + "_del"
+           oldname = os.path.join(dirrn,dl[0])
+           newname = os.path.join(ds[0],dl[0])
+           print("mv " + d + " " + dirrn)
+           print("mv " +  oldname + " " + newname)
+           print("rmdir " + dirrn)
+           os.rename(d,dirrn)
+           os.rename(oldname,newname)
+           os.rmdir(dirrn)
+
+# clear up straglers
+rmtree("__NOTEBOOK__")
+os.remove("notebook.nbk")
