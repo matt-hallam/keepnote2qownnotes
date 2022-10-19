@@ -48,6 +48,25 @@ for root, dirs, files in os.walk(".", topdown=False):
            os.rename(oldname,newname)
            os.rmdir(dirrn)
 
+# walk files
+# - Add headline to start of each md file
+#   This means you don't need to check the "Allow file name to be different from headline" option
+print("\n\nPhase 3\n\n")
+for root, dirs, files in os.walk(".", topdown=False):
+   for name in files:
+      f = os.path.join(root, name)
+      if name.endswith('.md'):
+          print("titling " + f)
+          sedtitle = "1s/^/# " + name[:-3] + "\\n\\n/"
+          subprocess.run(["sed","-i",sedtitle,f])
+
+      if name == 'page.html':
+          newname = os.path.join(root,root.split('/')[-1] + '.md')
+          print("converting " + f + ' to ' + newname)
+          with open(newname,"w") as newnamefd:
+              subprocess.run(["html2text",f],stdout=newnamefd)
+              os.remove(f) 
+
 # clear up straglers
 rmtree("__NOTEBOOK__")
 os.remove("notebook.nbk")
